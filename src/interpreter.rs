@@ -4,15 +4,16 @@ use std::io::Read;
 const MEMORY: usize = 30000;
 
 pub struct Interpreter {
-    ip: usize,
-    dp: usize,
-    data: [u8; MEMORY],
-    prog: Vec<char>
+    ip: usize,          // Instruction pointer
+    dp: usize,          // Data pointer
+    data: [u8; MEMORY], // Data array
+    prog: Vec<char>,    // Program to interpret
+    lps: Vec<usize>     // Loop pointer stack
 }
 
 impl Interpreter {
     pub fn new(p: Vec<char>) -> Interpreter {
-        Interpreter { ip: 0, dp: 0, data: [0; MEMORY], prog: p }
+        Interpreter { ip: 0, dp: 0, data: [0; MEMORY], prog: p, lps: Vec::new() }
     }
 
     pub fn run(&mut self) {
@@ -29,7 +30,7 @@ impl Interpreter {
                 '-' => self.data[self.dp] -= 1,
                 '.' => self.print_byte(),
                 ',' => self.read_byte(),
-                '[' => {} ,
+                '[' => self.jump_fwd(),
                 ']' => self.jump_back(),
                 _ => {} 
             }
@@ -53,18 +54,32 @@ impl Interpreter {
         }
     }
 
-    fn jump_back(&mut self) {
-        if !self.zero() {
+    fn jump_fwd(&mut self) {
+        if self.zero() {
             loop {
-                if self.prog[self.ip] == '[' {
+                if self.prog[self.ip] == ']' {
                     break;
                 }
 
                 if self.ip == 0 {
-                    panic!("Jump can't find [");
+                    panic!("Missing jump target (])");
                 }
 
-                self.ip -= 1;
+                self.ip += 1;
+            }
+        } else {
+            // Push pointer onto the stack
+            self.lps.push(self.ip - 1);
+        }
+    }
+
+    fn jump_back(&mut self) {
+        if !self.zero() {
+            let top = self.lps.pop();
+
+            match top {
+                Some(p) => self.ip = p,
+                None    => panic!("Missing jump target ([)")
             }
         }
     }
