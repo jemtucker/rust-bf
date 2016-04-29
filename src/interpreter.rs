@@ -1,7 +1,7 @@
 use std;
 use std::io::Read;
 
-const MEMORY: usize = 30000;
+const MEMORY: usize = 20;
 
 pub struct Interpreter {
     ip: usize,          // Instruction pointer
@@ -56,16 +56,22 @@ impl Interpreter {
 
     fn jump_fwd(&mut self) {
         if self.zero() {
+            let mut nested = 0;
+
             loop {
-                if self.prog[self.ip] == ']' {
-                    break;
-                }
-
-                if self.ip == 0 {
-                    panic!("Missing jump target (])");
-                }
-
                 self.ip += 1;
+
+                if self.ip == self.prog.len() {
+                    panic!("Missing jump target (]) : Instruction {}", self.ip);
+                }
+
+                // Count the number of nested loops to ensure we jump to 
+                // the matching end tag.
+                match self.prog[self.ip] {
+                    ']' => if nested == 0 { break; } else { nested -= 1 },
+                    '[' => nested += 1,
+                    _ => {}
+                }
             }
         } else {
             // Push pointer onto the stack
@@ -79,7 +85,7 @@ impl Interpreter {
 
             match top {
                 Some(p) => self.ip = p,
-                None    => panic!("Missing jump target ([)")
+                None    => panic!("Missing jump target ([) : Instruction {}", self.ip)
             }
         }
     }

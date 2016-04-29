@@ -36,9 +36,10 @@ fn run(file: &str) {
             let mut int = Interpreter::new(prog);
             int.run();
         }
-        Err(e) => panic!("{:?}", e)
+        Err(e) => {
+            println!("Failed to load file {:?}", e);
+        }
     }
-    
 }
 
 fn load_file(path: &str) -> Result<Vec<char>, Error> {
