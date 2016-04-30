@@ -14,6 +14,7 @@ fn main() {
 
     let mut opts = Options::new();
     opts.optopt("s", "source", "Input source file", "PATH");
+    opts.optflag("d", "debug-mode", "Run in debug mode");
     opts.optflag("h", "help", "Print this help menu");
 
     let parsed = match opts.parse(&args[1..]) {
@@ -22,18 +23,20 @@ fn main() {
     };
 
     if parsed.opt_str("s").is_some() {
+        let debug = parsed.opt_present("d");
         let file = parsed.opt_str("s").unwrap();
-        run(&file);
+        run(&file, debug);
     } else {
         print_usage(&args[0], opts);
         return;
     }
 }
 
-fn run(file: &str) {
+fn run(file: &str, debug: bool) {
     match load_file(file) {
         Ok(prog) => {
             let mut int = Interpreter::new(prog);
+            int.set_debug(debug);
             int.run();
         }
         Err(e) => {
@@ -59,6 +62,6 @@ fn load_file(path: &str) -> Result<Vec<char>, Error> {
 }
 
 fn print_usage(program: &str, opts: Options) {
-    let breif = format!("Usage: {} [options]", program);
+    let breif = format!("Usage: {} [hs[d]]", program);
     println!("{}", opts.usage(&breif));
 }

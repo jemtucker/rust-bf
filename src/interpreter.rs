@@ -8,12 +8,24 @@ pub struct Interpreter {
     dp: usize,          // Data pointer
     data: [u8; MEMORY], // Data array
     prog: Vec<char>,    // Program to interpret
-    lps: Vec<usize>     // Loop pointer stack
+    lps: Vec<usize>,    // Loop pointer stack
+    debug: bool
 }
 
 impl Interpreter {
     pub fn new(p: Vec<char>) -> Interpreter {
-        Interpreter { ip: 0, dp: 0, data: [0; MEMORY], prog: p, lps: Vec::new() }
+        Interpreter { 
+            ip: 0, 
+            dp: 0, 
+            data: [0; MEMORY], 
+            prog: p, 
+            lps: Vec::new(),
+            debug: false 
+        }
+    }
+
+    pub fn set_debug(&mut self, debug: bool) {
+        self.debug = debug;
     }
 
     pub fn run(&mut self) {
@@ -23,6 +35,10 @@ impl Interpreter {
                 break;
             }
 
+            if self.debug {
+                self.debug_print();
+            }
+            
             match self.prog[self.ip] {
                 '>' => self.dp += 1,
                 '<' => self.dp -= 1,
@@ -80,9 +96,8 @@ impl Interpreter {
     }
 
     fn jump_back(&mut self) {
+        let top = self.lps.pop();
         if !self.zero() {
-            let top = self.lps.pop();
-
             match top {
                 Some(p) => self.ip = p,
                 None    => panic!("Missing jump target ([) : Instruction {}", self.ip)
@@ -93,4 +108,18 @@ impl Interpreter {
     fn zero(&mut self) -> bool {
         self.data[self.dp] == 0
     }
+
+    fn debug_print(&self) {
+        let instr = self.prog[self.ip];
+
+        match instr {
+            '>' | '<' | '+' | '-' | '.' | ',' | '[' | ']' => {
+                print!("{} ({}) ", self.ip, instr);
+                print!("*{}* ", self.dp);
+                print!("{:?} ", self.data);
+                println!("{:?}", self.lps);
+            },
+            _ => {}
+        }
+    } 
 }
