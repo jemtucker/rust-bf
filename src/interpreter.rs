@@ -9,7 +9,7 @@ pub struct Interpreter {
     data: [u8; MEMORY], // Data array
     prog: Vec<char>,    // Program to interpret
     lps: Vec<usize>,    // Loop pointer stack
-    debug: bool
+    debug: bool         // Debug mode
 }
 
 impl Interpreter {
@@ -40,10 +40,10 @@ impl Interpreter {
             }
             
             match self.prog[self.ip] {
-                '>' => self.dp += 1,
-                '<' => self.dp -= 1,
-                '+' => self.data[self.dp] += 1,
-                '-' => self.data[self.dp] -= 1,
+                '>' => self.dp = self.dp.wrapping_add(1),
+                '<' => self.dp = self.dp.wrapping_sub(1),
+                '+' => self.data[self.dp] = self.data[self.dp].wrapping_add(1),
+                '-' => self.data[self.dp] = self.data[self.dp].wrapping_sub(1),
                 '.' => self.print_byte(),
                 ',' => self.read_byte(),
                 '[' => self.jump_fwd(),
